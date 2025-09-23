@@ -8,7 +8,7 @@ const SchemePage = (req, res) => {
     const [model, setModel] = useState('');
     const [getTenure, setGetTenure] = useState([]);
     const [tenure, setTenure] = useState('');
-    const [finalData, setFinalData] = useState([])
+    const [finalData, setFinalData] = useState(null)
 
     // Handle form submit
     const handleSubmit = (e) => {
@@ -21,7 +21,7 @@ const SchemePage = (req, res) => {
             },
         })
             .then((response) => {
-                const data = response.data.flat();
+                const data = response.data[0];
                 setFinalData(data);
 
             });
@@ -41,8 +41,7 @@ const SchemePage = (req, res) => {
                 params: { model: selectedModel },
             })
             .then((response) => {
-                const data = response.data.flat();
-                console.log("iugkjgjhjhg",data);
+                const data = response.data;
                 setGetBank(data); // Clear fuel options when the year is changed
             });
     };
@@ -62,7 +61,7 @@ const SchemePage = (req, res) => {
             })
             .then((response) => {
                 if (response.data === "data not found") return;
-                const data = response.data.flat();
+                const data = response.data;
                 setGetTenure(data); // Assuming fuel types are returned based on year and model
             });
     };
@@ -74,7 +73,7 @@ const SchemePage = (req, res) => {
         axios
             .get(`/data`)
             .then((response) => {
-                const fetchedModel = response.data.flat();
+                const fetchedModel = response.data;
                 setGetModel(fetchedModel);
             })
             .catch((error) => {
@@ -127,9 +126,9 @@ const SchemePage = (req, res) => {
                                 className="form-select"
                             >
                                 <option value="">Choose model</option>
-                                {getModel.map((md) => (
-                                    <option value={md} key={md}>
-                                        {md}
+                                {getModel.map((m,index) => (
+                                    <option value={m.model} key={index}>
+                                        {m.model}
                                     </option>
                                 ))}
                             </select>
@@ -146,9 +145,9 @@ const SchemePage = (req, res) => {
                                 className="form-select"
                             >
                                 <option value="">Choose bank</option>
-                                {getBank.map((b) => (
-                                    <option value={b} key={b}>
-                                        {b}
+                                {getBank.map((b,index) => (
+                                    <option value={b.bank} key={index}>
+                                        {b.bank}
                                     </option>
                                 ))}
                             </select>
@@ -165,9 +164,9 @@ const SchemePage = (req, res) => {
                                 className="form-select"
                             >
                                 <option value="">Choose Tenure</option>
-                                {getTenure.map((f) => (
-                                    <option value={f} key={f}>
-                                        {f}
+                                {getTenure.map((t,index) => (
+                                    <option value={t.tenure} key={index}>
+                                        {t.tenure}
                                     </option>
                                 ))}
                             </select>
@@ -184,7 +183,7 @@ const SchemePage = (req, res) => {
                 </div>
 
                 {/* Results Card */}
-                {finalData.length > 0 && (
+                {finalData && (
                     <div className="results-card">
                         <h3 className="results-title">
                             Scheme Details
@@ -192,15 +191,15 @@ const SchemePage = (req, res) => {
 
                         <div className="results-grid">
                             {[
-                                { label: 'ON-ROAD PRICE', value: finalData[0], format: 'currency' },
-                                { label: 'LOAN AMOUNT', value: finalData[1], format: 'currency' },
-                                { label: 'CASHBACK', value: finalData[2], format: 'percentage' },
-                                { label: 'CASHBACK CAP', value: finalData[3], format: 'currency' },
-                                { label: 'CUSTOMER CASHBACK', value: finalData[4], format: 'currency' },
-                                { label: 'EFFECTIVE PRICE', value: finalData[5], format: 'currency' },
-                                { label: 'ROI', value: finalData[6], format: 'percentage' },
-                                { label: 'EMI WITH ROI', value: finalData[7], format: 'currency' },
-                                { label: 'TOTAL OUTGOING', value: finalData[8], format: 'currency' }
+                                { label: 'ON-ROAD PRICE', value: finalData.on_road_price, format: 'currency' },
+                                { label: 'LOAN AMOUNT', value: finalData.loan_amount, format: 'currency' },
+                                { label: 'CASHBACK', value: finalData.cashback, format: 'percentage' },
+                                { label: 'CASHBACK CAP', value: finalData.cashback_cap, format: 'currency' },
+                                { label: 'CUSTOMER CASHBACK', value: finalData.customer_cashback, format: 'currency' },
+                                { label: 'EFFECTIVE PRICE', value: finalData.effective_price, format: 'currency' },
+                                { label: 'ROI', value: finalData.roi, format: 'percentage' },
+                                { label: 'EMI WITH ROI', value: finalData.emi_with_roi, format: 'currency' },
+                                { label: 'TOTAL OUTGOING', value: finalData.total_outgoing, format: 'currency' }
                             ].map((item, index) => (
                                 <div key={index} className="result-item">
                                     <label className="form-label">
