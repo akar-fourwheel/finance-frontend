@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import {fetchModels,fetchBanks,fetchTenures,fetchScheme,updateDatabase} from './api.js';
 
 const SchemePage = (req, res) => {
     const [getBank, setGetBank] = useState([]);
@@ -11,23 +11,20 @@ const SchemePage = (req, res) => {
     const [finalData, setFinalData] = useState(null)
 
     // Handle form submit
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        axios.get(`/fetch-scheme`, {
-            params: {
-                model: model,
-                bank: bank,
-                tenure: tenure,
-            },
-        })
-            .then((response) => {
+        try{
+            const response = await fetchScheme(model,bank,tenure);
+            if(response){
                 const data = response.data[0];
                 setFinalData(data);
-
-            });
+            }
+        }catch(err){
+            console.log("Error fetching schemes",err);
+        }
     };
 
-    const dataBasedOnModel = (e) => {
+    const dataBasedOnModel = async (e) => {
         const selectedModel = e.target.value;
         setModel(selectedModel);
         setBank('');
@@ -36,42 +33,37 @@ const SchemePage = (req, res) => {
         setGetTenure([]);
 
         // Fetch models based on selected year
-        axios
-            .get(`/fetch-scheme`, {
-                params: { model: selectedModel },
-            })
-            .then((response) => {
-                const data = response.data;
-                setGetBank(data); // Clear fuel options when the year is changed
-            });
+        try{
+            const res = await fetchBanks(selectedModel)
+            const data = res.data;
+            setGetBank(data)
+        }catch(err){
+            console.log("Error fetching banks",err)
+        }
     };
 
     // Fetch fuel based on year and model
-    const dataBasedOnModelAndBank = (e) => {
+    const dataBasedOnModelAndBank = async (e) => {
         const selectedBank = e.target.value;
         setBank(selectedBank);
         setTenure('');
         setGetTenure([]);
-        axios
-            .get(`/fetch-scheme`, {
-                params: {
-                    model: model,
-                    bank: selectedBank,
-                },
-            })
-            .then((response) => {
-                if (response.data === "data not found") return;
-                const data = response.data;
-                setGetTenure(data); // Assuming fuel types are returned based on year and model
-            });
+
+        try{
+            const response = await fetchTenures(model,selectedBank);
+            if (response.data === "data not found") return;
+            const data = response.data;
+            setGetTenure(data);
+        }catch(err){
+            console.log("Error fetching tenure",err);
+        }
     };
 
     // Fetch data when the year or model or fuel is selected
 
     useEffect(() => {
         // Fetch model initially
-        axios
-            .get(`/data`)
+            fetchModels()
             .then((response) => {
                 const fetchedModel = response.data;
                 setGetModel(fetchedModel);
@@ -84,7 +76,7 @@ const SchemePage = (req, res) => {
     useEffect(() => {
         const updateDb = async () => {
             try {
-                await axios.get('/update-db');
+                await updateDatabase();
                 console.log("Database updated successfully!");
                 localStorage.setItem("lastUpdate", new Date().toDateString());
             } catch (error) {
